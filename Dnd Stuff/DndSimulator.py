@@ -110,8 +110,8 @@ def roll_4d6_drop_lowest() -> int:
 def get_race(race: str):
     return RACES[race]
 
-def get_class(Class: str):
-    return CLASSES[Class]
+def get_class(cls: str):
+    return CLASSES[cls]
 
 def get_background(background: str):
     return BACKGROUNDS[background]
@@ -179,15 +179,19 @@ def pick_race():
     if race == 1:
         print("You selected Human!\n")
         get_race("Human")
+        return "Human" 
     elif race == 2:
         print("You selected Elf!\n")
         get_race("Elf")
+        return "Elf" 
     elif race == 3:
         print("You selected Dwarf!\n")
         get_race("Dwarf")
+        return "Dwarf" 
     elif race == 4:
         print("You selected Halfling!\n")
         get_race("Halfling")
+        return "Halfling" 
 
 def pick_class():
     while True:
@@ -206,15 +210,19 @@ def pick_class():
     if Class == 1:
         print("You selected Fighter!\n")
         get_class("Fighter")
+        return "Fighter" 
     elif Class == 2:
         print("You selected Wizard!\n")
         get_class("Wizard")
+        return "Wizard" 
     elif Class == 3:
         print("You selected Rogue!\n")
         get_class("Rogue")
+        return "Rogue" 
     elif Class == 4:
         print("You selected Cleric!\n")
-        get_class("Cleric")    
+        get_class("Cleric")
+        return "Cleric"    
 
 def pick_background():
     while True:
@@ -234,17 +242,27 @@ def pick_background():
     if background == 1:
         print("You selected Soldier!\n")
         get_background("Soldier")
+        return "soldier"
     elif background == 2:
         print("You selected Sage!\n")
         get_background("Sage")
+        return "sage"
     elif background == 3:
         print("You selected Criminal!\n")
         get_background("Criminal")
+        return "Criminal" 
     elif background == 4:
         print("You selected Folk Hero!\n")
         get_background("Folk Hero")
+        return "Folk Hero" 
 
-def stat_select():
+def stat_select(race_name, class_name):
+    # Accessing data from dataset
+    race = get_race(race_name)
+    cls = get_class(class_name)
+
+    available_abilities = ALL_ABILITIES.copy()
+    
     while True:
         try:
             print("How do you want to assign your stats?\n1. Rolling (recommended)\n2. Points buy (27 pts)\n3. Standard array")
@@ -256,37 +274,59 @@ def stat_select():
         except ValueError:
             print("Invalid, please pick a number between 1 and 3")
 
+    # Picking how you want to assign your stats
     if choice == 1:
         order = ['STR', 'DEX', 'CON', 'INT', 'WIS', 'CHA']
         scores = []
-        character_scores = []
+        character_scores = {}
+        
+        # Rolling 4d6 and dropping lowest
         for i in range(6):
             roll = roll_4d6_drop_lowest()
             scores.append(roll)
         scores = sorted(scores, reverse=True)
         print(f"Your rolls are: {scores}")
 
+        # Assigning scores
         for i in range(6):
-            assign = input(f"What would you like to assign {scores[i]} to? Please select {ALL_ABILITIES} ")
+            assign = input(f"What would you like to assign {scores[i]} to? Please select {available_abilities}."
+                           f"\nDo note your chosen class is {class_name}, which has the primary stats of {cls['primary_abilities']} "
+            )
             while True:
-                if assign.upper() not in ALL_ABILITIES:
-                    assign = input(f"Invalid choice, please pick one of the following: {ALL_ABILITIES} ")
+                if assign.upper() not in available_abilities:
+                    assign = input(f"Invalid choice, please pick one of the following: {available_abilities} ")
                 else:
-                    character_scores.append(f"{assign.upper()}: {scores[i]}")
-                    ALL_ABILITIES.remove(assign.upper())
+                    character_scores[assign.upper()] = scores[i]
+                    available_abilities.remove(assign.upper())
                     break
+
+        # Applying racial bonuses
+        print(f"\nApplying racial bonuses for {race_name}...")
+        for ability, bonus in race["ability_bonuses"].items():
+            if ability in character_scores:
+                character_scores[ability] += bonus
+                print(f"  +{bonus} to {ability} (now {character_scores[ability]})")
         
-        character_scores.sort(key=lambda x: order.index(x.split(':')[0]))
-        print(character_scores)
+        # Sorting scores
+        print("\nFinal Ability Scores (after racial bonuses):")
+        for ability in order:
+            print(f"{ability}: {character_scores[ability]}")
             
+    elif choice == 2:
+        costs = {9:1, 10:2, 11:3, 12:4, 13:5, 14:7, 15:9}
+        scores = {a: 8 for a in ALL_ABILITIES}
+        points = 27
 
 def create_character():
-    pick_race()
-    pick_class()
-    pick_background()
+    # Choosing race, class, and background
+    chosen_race = pick_race()
+    chosen_class = pick_class()
+    chosen_background = pick_background()
+
+    # Selecting Stats
+    
 
 # ====================
 #        Main
 # ====================
 
-create_character()
